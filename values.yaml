@@ -1,0 +1,17 @@
+persistence:
+    size: "500Mi"
+
+version: "v3.0.2"
+
+log:
+    level: "info"
+
+server:
+    replicas: 3
+    bootstrapExpected: 2
+
+agent:
+    replicas: 1
+
+nodeSelector: {}
+tolerations: []
