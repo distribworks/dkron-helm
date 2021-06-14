@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "dkron.fullname" . }}-server
+  labels:
+    {{- include "dkron.serverLabels" . | nindent 4 }}
+spec:
+  {{- if not .Values.server.autoscaling.enabled }}
+  replicas: {{ .Values.server.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "dkron.serverSelectorLabels" . | nindent 6 }}
+  serviceName: {{ include "dkron.fullname" . }}
+  template:
+    metadata:
+      {{- with .Values.server.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "dkron.serverSelectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "dkron.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.server.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.server.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["./dkron"]
+          args:
+            - "agent"
+            - "--server"
+            - "--config=/etc/dkron/dkron.yaml"
+            - "--data-dir=/dkron"
+            - "--retry-join=\"provider=k8s label_selector=\"\"app.kubernetes.io/instance={{ .Release.Name }}\"\" namespace=\"\"{{ .Release.Namespace }}\"\"\""
+            - "--log-level={{ .Values.server.log.level }}"
+            - "--bootstrap-expect={{ include  "dkron.bootstrapExpect" . }}"
+          volumeMounts:
+            - name: "data"
+              mountPath: "/dkron"
+          ports:
+            -   name: http
+                containerPort: 8080
+            -   name: serf
+                containerPort: 8946
+            -   name: grpc
+                containerPort: 6868
+          resources:
+            {{- toYaml .Values.server.resources | nindent 12 }}
+      {{- with .Values.server.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.server.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.server.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: {{ .Values.server.persistence.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.server.persistence.size }}

@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "dkron.fullname" . }}-agent
+  labels:
+    {{- include "dkron.agentLabels" . | nindent 4 }}
+spec:
+  {{- if not .Values.agent.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "dkron.agentSelectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.agent.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "dkron.agentSelectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "dkron.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.agent.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.agent.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["./dkron"]
+          args:
+              - "agent"
+              - "--config=/etc/dkron/dkron.yaml"
+              - "--tag=\"type=scrapfly\""
+              - "--retry-join=\"provider=k8s label_selector=\"\"app.kubernetes.io/instance={{ .Release.Name }}\"\" namespace=\"\"{{ .Release.Namespace }}\"\"\""
+              - "--log-level={{ .Values.agent.log.level }}"
+          ports:
+            -   name: serf
+                containerPort: 8946
+            -   name: grpc
+                containerPort: 6868
+          resources:
+            {{- toYaml .Values.agent.resources | nindent 12 }}
+      {{- with .Values.agent.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.agent.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.agent.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "dkron.fullname" . }}
+  labels:
+    {{- include "dkron.serverLabels" . | nindent 4 }}
+spec:
+  type: {{ .Values.server.service.type }}
+  clusterIP: None
+  ports:
+    - protocol: TCP
+      name: serf
+      port: 8946
+    - protocol: TCP
+      name: grpc
+      port: 6868
+    - protocol: TCP
+      name: web
+      port: 8080
+  selector:
+    {{- include "dkron.serverSelectorLabels" . | nindent 4 }}

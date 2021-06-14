@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "dkron.fullname" . }}-test-connection"
+  labels:
+    {{- include "dkron.serverLabels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "dkron.fullname" . }}:{{ .Values.server.service.port }}']
+  restartPolicy: Never
