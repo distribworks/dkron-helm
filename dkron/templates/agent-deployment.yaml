@@ -4,6 +4,10 @@ metadata:
   name: {{ include "dkron.fullname" . }}-agent
   labels:
     {{- include "dkron.agentLabels" . | nindent 4 }}
+  {{- with .Values.agent.deploymentAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   {{- if not .Values.agent.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
@@ -13,9 +17,12 @@ spec:
       {{- include "dkron.agentSelectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.agent.podAnnotations }}
       annotations:
+      {{- with .Values.agent.podAnnotations }}
         {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if eq .Values.image.pullPolicy "Always" }}
+        uuid: {{ uuidv4 }}
       {{- end }}
       labels:
         {{- include "dkron.agentSelectorLabels" . | nindent 8 }}
@@ -40,6 +47,7 @@ spec:
               - "--tag=\"type=scrapfly\""
               - "--retry-join=\"provider=k8s label_selector=\"\"app.kubernetes.io/instance={{ .Release.Name }}\"\" namespace=\"\"{{ .Release.Namespace }}\"\"\""
               - "--log-level={{ .Values.agent.log.level }}"
+              - "--tag=\"agent=true\""
           ports:
             -   name: serf
                 containerPort: 8946

@@ -14,9 +14,12 @@ spec:
   serviceName: {{ include "dkron.fullname" . }}
   template:
     metadata:
-      {{- with .Values.server.podAnnotations }}
       annotations:
+      {{- with .Values.server.podAnnotations }}
         {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if eq .Values.image.pullPolicy "Always" }}
+        uuid: {{ uuidv4 }}
       {{- end }}
       labels:
         {{- include "dkron.serverSelectorLabels" . | nindent 8 }}
