@@ -1,0 +1,28 @@
+{{- if .Values.agent.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "dkron.fullname" . }}
+  labels:
+    {{- include "dkron.agentLabels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "dkron.fullname" . }}-agent
+  minReplicas: {{ .Values.agent.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.agent.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.agent.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ .Values.agent.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.agent.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: {{ .Values.agent.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}

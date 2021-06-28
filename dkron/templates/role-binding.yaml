@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "dkron.fullname" . }}
+  labels:
+    {{- include "dkron.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "dkron.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+    kind: Role
+    name: {{ include "dkron.fullname" . }}
+    apiGroup: rbac.authorization.k8s.io

@@ -1,5 +1,0 @@
-persistence:
-    storageClass: "local-path"
-
-log:
-    level: "debug"
