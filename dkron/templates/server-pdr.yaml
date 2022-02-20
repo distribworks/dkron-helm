@@ -1,0 +1,9 @@
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "dkron.fullname" . }}
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      {{- include "dkron.serverSelectorLabels" . | nindent 6 }}

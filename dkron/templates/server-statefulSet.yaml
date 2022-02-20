@@ -56,6 +56,10 @@ spec:
                 containerPort: 8946
             -   name: grpc
                 containerPort: 6868
+          lifecycle:
+            preStop:
+              exec:
+                command: ["./dkron", "leave"]
           resources:
             {{- toYaml .Values.server.resources | nindent 12 }}
           envFrom:
