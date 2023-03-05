@@ -23,7 +23,7 @@ serviceAccount:
   name: ""
 
 server:
-  replicaCount: 1
+  replicaCount: 3
 
   log:
     level: "info"
@@ -74,7 +74,6 @@ server:
   affinity: {}
 
   persistence:
-    storageClass: "standard"
     size: 1Gi
 
 agent:
