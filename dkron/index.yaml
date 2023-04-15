@@ -1,0 +1,10 @@
+apiVersion: v1
+entries:
+  dkron:
+  - name: dkron
+    version: 1.0.0
+    created: "2023-04-15T21:00:07.336435+02:00"
+    description: Dkron Helm Chart
+    urls:
+    - https://github.com/distribworks/dkron-helm/archive/refs/tags/v1.0.0.tar.gz
+generated: "2023-04-15T21:00:07.336435+02:00"
