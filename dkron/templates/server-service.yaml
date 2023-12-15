@@ -7,6 +7,9 @@ metadata:
 spec:
   type: {{ .Values.server.service.type }}
   clusterIP: None
+  # Servers have to be available even they aren't ready
+  # because they need to join the cluster
+  publishNotReadyAddresses: true
   ports:
     - protocol: TCP
       name: serf
