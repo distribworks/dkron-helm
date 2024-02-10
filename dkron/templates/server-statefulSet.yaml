@@ -5,6 +5,7 @@ metadata:
   labels:
     {{- include "dkron.serverLabels" . | nindent 4 }}
 spec:
+  podManagementPolicy: Parallel
   {{- if not .Values.server.autoscaling.enabled }}
   replicas: {{ .Values.server.replicaCount }}
   {{- end }}
@@ -65,6 +66,15 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "dkron.fullname" . }}-envs
+          readinessProbe:
+            httpGet:
+              path: /v1/leader
+              port: 8080
+            failureThreshold: 2
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            successThreshold: 1
+            timeoutSeconds: 5
       {{- with .Values.server.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
